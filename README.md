@@ -16,7 +16,7 @@ It leverages modern AI and web technologies—LangChain for autonomous reasoning
 ## Author
 
 Íñigo Rodríguez Sánchez  
-Data & AI Engineer
+AI & Data Engineer
 
 ---
 
@@ -88,7 +88,7 @@ SciFetch integrates multiple academic APIs, each specializing in different scien
 ## Project Structure
 
 ```bash
-SciFetch/
+sci-fetch/
 ├── agents/                    # Core agent logic
 │   └── scientific_fetcher.py  # Main autonomous agent that orchestrates API tools
 │
@@ -242,8 +242,8 @@ To run SciFetch locally, follow these steps:
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/SciFetch.git
-cd SciFetch
+git clone https://github.com/YOUR_USERNAME/sci-fetch.git
+cd sci-fetch
 ```
 
 2. (Optional but recommended) Create and activate a virtual environment:

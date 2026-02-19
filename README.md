@@ -9,16 +9,7 @@
 
 It leverages modern AI and web technologies—LangChain for autonomous reasoning, OpenAI for summarization, and academic APIs for up-to-date content retrieval. The final output is delivered as a styled, downloadable **PDF report**, accessible via a clean web interface.
 
->👉 Try it live at: [https://scifetch.vercel.app](https://scifetch.vercel.app)
-
----
-
-## Author
-
-Íñigo Rodríguez Sánchez  
-AI & Data Engineer
-
----
+>Try it live at: [https://scifetch.vercel.app](https://scifetch.vercel.app)
 
 ## Table of Contents
 
@@ -33,8 +24,6 @@ AI & Data Engineer
 - [Usage](#usage)
 - [Future Work](#future-work)
 - [Final Words](#final-words)
-
----
 
 ## Introduction
 
@@ -51,9 +40,6 @@ It combines the reasoning capabilities of **LangChain agents**, the language gen
 
 The platform serves both as a **research assistant** and as a **proof of concept** for combining autonomous agents, modern web development, and scientific APIs into an end-to-end application.
 
-
----
-
 ## Key Features
 
 - **Autonomous Literature Agent:** Combines LangChain's ReAct planning with domain-specific tools to select the most relevant academic APIs for each query.
@@ -66,7 +52,6 @@ The platform serves both as a **research assistant** and as a **proof of concept
 - **Secure API Usage:** Requires an OpenAI API key, securely transmitted and handled via environment variables.
 - **Tested for Robustness:** Includes a high-coverage test suite using Pytest (89%) to ensure system reliability and future extensibility.
 
----
 ## Scientific Domain Coverage
 
 SciFetch integrates multiple academic APIs, each specializing in different scientific domains. Understanding the scope of each can help formulate more effective prompts.
@@ -82,8 +67,6 @@ SciFetch integrates multiple academic APIs, each specializing in different scien
 > 💡 **Prompt Tip:**  
 > When querying SciFetch, focus on topics within **healthcare, AI, bioinformatics, computer science, or physics**, as these are well represented in the integrated repositories.  
 > Niche fields (e.g., Art Theory, Theology) may return sparse or irrelevant results.
-
----
 
 ## Project Structure
 
@@ -136,8 +119,6 @@ sci-fetch/
 └── requirements.txt           # Python dependencies
 ```
 
----
-
 ## Backend Overview
 
 ![Backend](https://img.shields.io/badge/Backend-FastAPI-teal)
@@ -159,8 +140,6 @@ The backend is developed with FastAPI, providing an HTTP interface to the LangCh
 | `utils/logs_config.py`           | Centralized logging configuration with color-coded output for different log levels.                                                    |
 | `utils/name_sanitizer.py	`       | Utility for sanitizing prompt strings into safe filenames for saving and downloading reports.                                          |
 
----
-
 ## Frontend Overview
 
 ![Next.js](https://img.shields.io/badge/Frontend-Next.js-darkblue)
@@ -175,8 +154,6 @@ The frontend is built with Next.js, providing a clean web interface where users 
 | `frontend/components/Footer.tsx`         | Footer with author credits and project links.                           |
 | `frontend/pages/index.tsx`               | Main entry point. Hosts the input form, API logic, and renders results. |
 | `frontend/styles/globals.css`            | Global CSS styles for layout, typography, and markdown formatting.      |
-
----
 
 ## Tests & Coverage
 
@@ -234,8 +211,6 @@ TOTAL                            279     30    89%
 
 These tests give confidence that core modules behave reliably under various scenarios and inputs. High coverage ensures robustness across future updates.
 
----
-
 ## Installation
 
 To run SciFetch locally, follow these steps:
@@ -263,8 +238,6 @@ OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 > Note: The application currently runs locally only and is not deployed as a public API or web service.
-
----
 
 ## Usage
 
@@ -321,8 +294,6 @@ The server will return:
 
 The api_key is required in every request and must be a valid OpenAI key.
 
----
-
 ## Future Work
 
 Although SciFetch is functional and publicly accessible, there are several directions for future enhancement:
@@ -334,14 +305,14 @@ Although SciFetch is functional and publicly accessible, there are several direc
 - **Tool Expansion:** Add support for new academic APIs (e.g., Semantic Scholar, CORE, IEEE Xplore).
 - **Offline LLM Compatibility:** Explore use of local open-source models (e.g., Mistral, LLaMA) for air-gapped environments.
 
----
+## Contributing & Contact
 
-## Final Words
-
-SciFetch is a small but ambitious project, built to help researchers and engineers accelerate the information gathering process.   
+SciFetch is a small but ambitious project, built to help researchers and engineers accelerate the information gathering process.  
 It is an evolving tool, open for experimentation, extension, or integration into larger pipelines or interfaces.
-
-Feel free to explore, extend, or integrate it into your own applications. Contributions, feedback, or improvements are always welcome.
 
 **If you’ve found this project useful or inspiring — feel free to build on it, break it, or just drop a star 🌟.**
 
+- Bugs / feature requests: please open an **Issue**.
+- Direct contact: [inigo.rodsan@gmail.com](mailto:inigo.rodsan@gmail.com)
+
+Developed & maintained by [Íñigo Rodríguez](https://github.com/irdsn).

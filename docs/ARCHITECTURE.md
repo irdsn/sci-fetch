@@ -14,6 +14,11 @@ sci-fetch/
 │   ├── OpenAlex.py            # OpenAlex client with inverted abstract decoding
 │   └── PubMed.py              # PubMed search and fetch logic
 │
+├── docs/                      # Extended technical documentation
+│   ├── images/                # Images used in project documentation
+│   │   └── SciFetch_logo.png  # Project logo used in docs
+│   └── ARCHITECTURE.md        # Detailed repository structure and technical overview
+│
 ├── frontend/                  # Next.js frontend interface
 │   ├── components/            # React components (InputForm, Footer, etc.)
 │   ├── pages/                 # Application pages (index.tsx)

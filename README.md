@@ -15,6 +15,7 @@ It leverages modern AI and web technologies—LangChain for autonomous reasoning
 ## Table of Contents
 
 - [Introduction](#introduction)
+- [Documentation](#documentation)
 - [Key Features](#key-features)
 - [Scientific Domain Coverage](#scientific-domain-coverage)
 - [Installation](#installation)
@@ -36,6 +37,15 @@ It combines the reasoning capabilities of **LangChain agents**, the language gen
 - Deployment flexibility, with both API and browser access.
 
 The platform serves both as a **research assistant** and as a **proof of concept** for combining autonomous agents, modern web development, and scientific APIs into an end-to-end application.
+
+## Documentation
+
+Additional technical documentation is available in the `/docs` directory.
+
+- **[ARCHITECTURE.md](docs/ARCHITECTURE.md)**  
+  Provides a detailed overview of the repository structure, backend and frontend components, API integrations, and the main technical building blocks of SciFetch.
+
+This document is intended for readers who want a deeper technical view of how the system is organized beyond the high-level project overview in this README.
 
 ## Key Features
 

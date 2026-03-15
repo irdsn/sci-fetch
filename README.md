@@ -4,7 +4,7 @@
 ![AI](https://img.shields.io/badge/AI-LangChain-blueviolet)
 ![Task](https://img.shields.io/badge/Task-Information_Retrieval-orange)
 ![Coverage](https://img.shields.io/badge/Coverage-89%25-brightgreen)
-![Last Updated](https://img.shields.io/badge/Last%20Updated-June%202025-brightgreen)
+![Last Updated](https://img.shields.io/badge/Last%20Updated-March%202026-brightgreen)
 
 **SciFetch** is an autonomous AI agent designed to search, synthesize, and generate scientific literature reports based on natural language prompts.
 

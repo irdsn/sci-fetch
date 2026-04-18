@@ -4,11 +4,11 @@
 ![AI](https://img.shields.io/badge/AI-LangChain-blueviolet)
 ![Task](https://img.shields.io/badge/Task-Information_Retrieval-orange)
 ![Coverage](https://img.shields.io/badge/Coverage-89%25-brightgreen)
-![Last Updated](https://img.shields.io/badge/Last%20Updated-March%202026-brightgreen)
+![Last Updated](https://img.shields.io/badge/Last%20Updated-April%202026-brightgreen)
 
 **SciFetch** is an autonomous AI agent designed to search, synthesize, and generate scientific literature reports based on natural language prompts.
 
-It leverages modern AI and web technologies—LangChain for autonomous reasoning, OpenAI for summarization, and academic APIs for up-to-date content retrieval. The final output is delivered as a styled, downloadable **PDF report**, accessible via a clean web interface.
+It leverages modern AI and web technologies, LangChain for orchestration, OpenAI for summarization, and academic APIs for up-to-date content retrieval. The final output is delivered as a styled, downloadable **PDF report**, accessible via a clean web interface.
 
 >Try it live at: [https://scifetch.vercel.app](https://scifetch.vercel.app)
 
@@ -27,16 +27,16 @@ It leverages modern AI and web technologies—LangChain for autonomous reasoning
 
 **SciFetch** is a full-stack autonomous system designed to assist researchers and professionals in exploring scientific literature efficiently through AI-powered summarization and presentation.
 
-Born from the need to automate scientific information retrieval, SciFetch uses a multi-agent architecture to query multiple trusted academic APIs, extract relevant publications, and synthesize a human-readable report in PDF format.
+Born from the need to automate scientific information retrieval, SciFetch queries multiple trusted academic APIs, extracts relevant publications, and synthesizes a human-readable report in PDF format.
 
-It combines the reasoning capabilities of **LangChain agents**, the language generation power of **OpenAI models**, and a **web-friendly interface** built with **Next.js** to offer:
+It combines the orchestration capabilities of **LangChain**, the language generation power of **OpenAI models**, and a **web-friendly interface** built with **Next.js** to offer:
 
 - Fast and structured access to scientific knowledge.
 - Reliable summarization of complex topics from multiple sources.
 - Ready-to-use, visually styled PDF reports.
 - Deployment flexibility, with both API and browser access.
 
-The platform serves both as a **research assistant** and as a **proof of concept** for combining autonomous agents, modern web development, and scientific APIs into an end-to-end application.
+The platform serves both as a **research assistant** and as a **proof of concept** for combining autonomous retrieval, modern web development, and scientific APIs into an end-to-end application.
 
 ## Documentation
 
@@ -49,14 +49,14 @@ This document is intended for readers who want a deeper technical view of how th
 
 ## Key Features
 
-- **Autonomous Literature Agent:** Combines LangChain's ReAct planning with domain-specific tools to select the most relevant academic APIs for each query.
-- **Multi-Source Scientific Retrieval:** Aggregates results from PubMed, arXiv, OpenAlex, EuropePMC, and CrossRef to ensure coverage and diversity.
-- **LLM-Powered Summarization:** Synthesizes complex, multi-source information into a cohesive and accessible summary using OpenAI's GPT models.
-- **Styled PDF Report Generation:** Outputs are delivered as downloadable, professionally formatted PDF documents using custom HTML templates and WeasyPrint.
-- **Modern Web Interface:** Built with Next.js, the frontend allows users to submit research prompts and retrieve results directly from the browser.
+- **Autonomous Literature Agent:** Uses a retrieval pipeline with source-specific tools to query the most relevant academic APIs for each request.
+- **Multi-Source Scientific Retrieval:** Aggregates results from PubMed, arXiv, OpenAlex, Europe PMC, and CrossRef to ensure coverage and diversity.
+- **LLM-Powered Summarization:** Synthesizes complex, multi-source information into a cohesive and accessible summary using OpenAI models.
+- **Styled PDF Report Generation:** Outputs are delivered as downloadable, professionally formatted PDF documents using a shared HTML report template rendered through a high-fidelity PDF workflow.
+- **Modern Web Interface:** Built with Next.js, the frontend allows users to submit research prompts, inspect the generated report preview, and download the final PDF directly from the browser.
 - **Full Public Deployment:** The backend is deployed on Render and the frontend on Vercel, providing instant access at [https://scifetch.vercel.app](https://scifetch.vercel.app).
-- **Graceful Failure Handling:** If one API fails or returns incomplete data, the agent continues processing with the remaining sources.
-- **Secure API Usage:** Requires an OpenAI API key, securely transmitted and handled via environment variables.
+- **Graceful Failure Handling:** If one API fails or returns incomplete data, the pipeline continues processing with the remaining sources.
+- **Secure API Usage:** Requires an OpenAI API key, sent per request and handled server-side during execution.
 - **Tested for Robustness:** Includes a high-coverage test suite using Pytest (89%) to ensure system reliability and future extensibility.
 
 ## Scientific Domain Coverage
@@ -70,8 +70,8 @@ SciFetch integrates multiple academic APIs, each specializing in different scien
 | [**EuropePMC**](https://europepmc.org)        | Biomedical (Europe-focused): Pharmacology, Virology, Bioinformatics, Clinical Trials                     |
 | [**OpenAlex**](https://openalex.org)          | Multidisciplinary: Education, Social Sciences, Computer Science, Psychology, Economics                   |
 | [**PubMed**](https://pubmed.ncbi.nlm.nih.gov) | Biomedical & Life Sciences: Medicine, Genomics, Neuroscience, Public Health                              |
- 
-> 💡 **Prompt Tip:**  
+
+> **Prompt Tip:**  
 > When querying SciFetch, focus on topics within **healthcare, AI, bioinformatics, computer science, or physics**, as these are well represented in the integrated repositories.  
 > Niche fields (e.g., Art Theory, Theology) may return sparse or irrelevant results.
 
@@ -96,12 +96,19 @@ source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Add your OpenAI key on the .env file:
+4. Install frontend dependencies:
+```bash
+cd frontend
+npm install
+cd ..
+```
+
+5. Add your OpenAI key to the `.env` file if needed for local backend execution:
 ```bash
 OPENAI_API_KEY=your_openai_api_key_here
 ```
 
-> Note: The application currently runs locally only and is not deployed as a public API or web service.
+> Note: SciFetch is publicly accessible through its deployed frontend/backend setup, and it can also be run locally for development.
 
 ## Usage
 
@@ -113,8 +120,8 @@ Access the live web application here:
 > https://scifetch.vercel.app
 
 - Enter your research prompt and OpenAI API key.
-- The agent will run automatically, fetch and summarize scientific articles, and display the results. 
-- You can preview the generated content and download a styled PDF report.
+- The pipeline will fetch and summarize scientific articles and display the generated report preview.
+- You can inspect the report preview and download the final PDF artifact.
 
 ### 2. Run Locally via CLI or API (advanced)
 
@@ -126,7 +133,7 @@ Launch the agent script and enter your prompt interactively:
 python agents/scientific_fetcher.py
 ```
 
-You'll be prompted to enter your research query. A PDF file will be saved locally in the outputs/ folder.
+You'll be prompted to enter your research query and API key. A PDF file will be saved locally in the `outputs/` folder.
 
 #### Option B: Run the FastAPI server
 
@@ -140,7 +147,7 @@ Then access the interactive documentation (API) at:
 http://127.0.0.1:8000/docs
 ```
 
-Send a POST request to /run endpoint with the following JSON:
+Send a POST request to the `/run` endpoint with the following JSON:
 ```json
 {
   "prompt": "Applications of self-supervised learning in genomics",
@@ -151,12 +158,16 @@ Send a POST request to /run endpoint with the following JSON:
 The server will return:
 ```json
 {
-  "html_preview": "<...>",
-  "download_url": "/outputs/your_report.pdf"
+  "message": "SciFetch run completed.",
+  "filename": "applications_of_self_supervised_learning_in_genomics.pdf",
+  "download_url": "http://127.0.0.1:8000/download/applications_of_self_supervised_learning_in_genomics.pdf",
+  "output_file": "outputs/applications_of_self_supervised_learning_in_genomics.pdf",
+  "html_preview": "<!DOCTYPE html>...",
+  "pdf_warning": null
 }
 ```
 
-The api_key is required in every request and must be a valid OpenAI key.
+The `api_key` is required in every request and must be a valid OpenAI key.
 
 ## Future Work
 
@@ -174,9 +185,9 @@ Although SciFetch is functional and publicly accessible, there are several direc
 SciFetch is a small but ambitious project, built to help researchers and engineers accelerate the information gathering process.  
 It is an evolving tool, open for experimentation, extension, or integration into larger pipelines or interfaces.
 
-**If you’ve found this project useful or inspiring — feel free to build on it, break it, or just drop a star 🌟.**
+**If you've found this project useful or inspiring, feel free to build on it, break it, or just drop a star.**
 
 - Bugs / feature requests: please open an **Issue**.
 - Direct contact: [inigo.rodsan@gmail.com](mailto:inigo.rodsan@gmail.com)
 
-Developed & maintained by [Íñigo Rodríguez](https://github.com/irdsn).
+Developed & maintained by [Iñigo Rodriguez](https://github.com/irdsn).

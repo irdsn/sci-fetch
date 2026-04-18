@@ -45,3 +45,6 @@ build/
 # Pytest coverage reports
 .coverage
 htmlcov/
+
+# Local generated project workspace
+project/

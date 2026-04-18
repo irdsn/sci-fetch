@@ -11,14 +11,26 @@
 
 import requests
 from typing import List, Dict
-from bs4 import BeautifulSoup
+from xml.etree import ElementTree as ET
 from dateutil import parser
 
 ##################################################################################################
 #                                        IMPLEMENTATION                                          #
 ##################################################################################################
 
-def extract_pubmed_date(article) -> str:
+def _find_text(element: ET.Element | None, path: str) -> str:
+    """Returns stripped text for an ElementTree path, or an empty string."""
+
+    if element is None:
+        return ""
+
+    node = element.find(path)
+    if node is None or node.text is None:
+        return ""
+    return node.text.strip()
+
+
+def extract_pubmed_date(article: ET.Element) -> str:
     """
     Extracts the publication date from a PubMed article element.
 
@@ -27,31 +39,35 @@ def extract_pubmed_date(article) -> str:
     no date can be extracted, it returns an empty string.
 
     Args:
-        article: A BeautifulSoup-parsed PubMedArticle XML element.
+        article: A PubMedArticle XML element.
 
     Returns:
         str: Formatted publication date or empty string if not found.
     """
 
     try:
-        if article.MedlineCitation.Article.ArticleDate:
-            y = article.MedlineCitation.Article.ArticleDate.Year.get_text()
-            m = article.MedlineCitation.Article.ArticleDate.Month.get_text()
-            d = article.MedlineCitation.Article.ArticleDate.Day.get_text()
+        article_date = article.find("./MedlineCitation/Article/ArticleDate")
+        if article_date is not None:
+            y = _find_text(article_date, "Year")
+            m = _find_text(article_date, "Month")
+            d = _find_text(article_date, "Day")
             return f"{y}-{m.zfill(2)}-{d.zfill(2)}"
     except Exception:
         pass
 
     try:
-        completed = article.MedlineCitation.DateCompleted
-        y = completed.Year.get_text()
-        m = completed.Month.get_text()
+        completed = article.find("./MedlineCitation/DateCompleted")
+        y = _find_text(completed, "Year")
+        m = _find_text(completed, "Month")
         return f"{y}-{m.zfill(2)}-01"
     except Exception:
         pass
 
     try:
-        date_str = article.MedlineCitation.Article.Journal.JournalIssue.PubDate.MedlineDate.get_text()
+        date_str = _find_text(
+            article,
+            "./MedlineCitation/Article/Journal/JournalIssue/PubDate/MedlineDate",
+        )
         dt = parser.parse(date_str, fuzzy=True)
         return dt.strftime("%Y-%m-%d")
     except Exception:
@@ -127,14 +143,17 @@ class PubMedClient:
         if resp.status_code != 200:
             return []
 
-        soup = BeautifulSoup(resp.text, "xml")
+        root = ET.fromstring(resp.text)
         articles = []
-        for article in soup.find_all("PubmedArticle"):
-            title = article.Article.ArticleTitle.get_text(strip=True) if article.Article.ArticleTitle else None
-            abstract = article.Article.Abstract.AbstractText.get_text(strip=True) if article.Article.Abstract else None
-            article_id = article.MedlineCitation.PMID.get_text(strip=True)
-            doi_tag = article.find("ELocationID", {"EIdType": "doi"})
-            doi = doi_tag.get_text(strip=True) if doi_tag else None
+        for article in root.findall(".//PubmedArticle"):
+            title = _find_text(article, "./MedlineCitation/Article/ArticleTitle") or None
+            abstract = _find_text(article, "./MedlineCitation/Article/Abstract/AbstractText") or None
+            article_id = _find_text(article, "./MedlineCitation/PMID")
+            doi = None
+            for location_id in article.findall(".//ELocationID"):
+                if location_id.attrib.get("EIdType") == "doi" and location_id.text:
+                    doi = location_id.text.strip()
+                    break
             pub_date = extract_pubmed_date(article)
 
             articles.append({

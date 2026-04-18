@@ -53,6 +53,7 @@ python-dateutil==2.9.0.post0
 python-dotenv==1.1.0
 PyYAML==6.0.2
 regex==2024.11.6
+reportlab==4.4.10
 requests==2.32.3
 requests-toolbelt==1.0.0
 six==1.17.0
@@ -69,7 +70,7 @@ typing-inspection==0.4.0
 typing_extensions==4.13.2
 urllib3==2.4.0
 uvicorn==0.34.3
-uvloop==0.21.0
+uvloop==0.21.0; platform_system != "Windows"
 watchfiles==1.1.0
 weasyprint==65.1
 webencodings==0.5.1

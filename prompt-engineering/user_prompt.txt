@@ -1,0 +1,11 @@
+Using the retrieved articles below, write a high-quality scientific synthesis.
+
+Requirements:
+- Focus on the most relevant and informative papers.
+- Explain the main contributions and findings supported by the retrieved material.
+- Identify recurring trends, methodological patterns, and notable differences across papers.
+- Explicitly call out limitations, uncertainty, or evidence gaps.
+- Do not use information that is not contained in the retrieved articles.
+
+The topic you must research is:
+{user_input}

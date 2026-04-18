@@ -4,156 +4,454 @@
   <meta charset="UTF-8" />
   <title>SciFetch Report</title>
   <style>
-    body {
-      font-family: "DejaVu Serif", serif;
-      margin: 50px 60px;
-      color: #333;
-      line-height: 1.6;
-      background-color: #fff;
+    :root {
+      --ink: #102032;
+      --foreground: #122033;
+      --muted: #5d7286;
+      --border: #d6e2e8;
+      --accent: #0f766e;
+      --accent-strong: #0c625c;
+      --soft: #edf7f6;
+      --highlight: #d8a11e;
+      --panel: #f8fbfc;
     }
 
-    h1, h2, h3 {
-      color: #2c3e50;
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 2.8em;
-      margin-bottom: 0.2em;
-    }
-
-    h2 {
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 5px;
-      margin-top: 2.5em;
-    }
-
-    h3 {
-      margin-top: 1.8em;
-    }
-
-    body p {
-      text-align: justify;
-    }
-
-    .meta p {
-      text-align: center;
-    }
-
-    .meta {
-      font-size: 0.95em;
-      color: #555;
-      text-align: center;
-      margin-bottom: 2em;
-    }
-
-    .meta em {
-      color: #777;
-    }
-
-    .prompt-line {
+    @page {
+      size: A4;
       margin: 0;
     }
 
-    .prompt-line strong {
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "Inter", "Helvetica Neue", Arial, sans-serif;
+      color: var(--foreground);
+      background: #f6fafb;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      min-height: 100vh;
+      padding: 26mm 18mm 20mm;
+      position: relative;
+    }
+
+    .grid-overlay {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(16, 32, 50, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(16, 32, 50, 0.025) 1px, transparent 1px);
+      background-size: 24px 24px;
+      mask-image: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.02));
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      background: var(--ink);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 18px 34px rgba(15, 23, 42, 0.22);
+    }
+
+    .brand-mark svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    .brand-copy h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-copy p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid rgba(214, 226, 232, 0.9);
+      color: #4b6b77;
+      font-size: 12px;
       font-weight: 600;
     }
 
-    .prompt-line em {
+    .metrics {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 1.9fr 1.1fr;
+      gap: 12px;
+    }
+
+    .metric-card,
+    .topic-card,
+    .summary-card,
+    .article-card {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid rgba(214, 226, 232, 0.9);
+      border-radius: 22px;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.08);
+    }
+
+    .metric-card {
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: flex-start;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      color: var(--muted);
+      margin: 0 0 6px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .metric-main {
+      min-height: 62px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .metric-value {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 700;
+      color: var(--foreground);
+      text-align: center;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: nowrap;
+      gap: 6px;
+      margin-top: 9px;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 8px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--accent-strong);
+      font-size: 9px;
+      font-weight: 600;
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      white-space: nowrap;
+    }
+
+    .topic-card {
+      margin-top: 20px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .topic-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--highlight));
+    }
+
+    .section-title {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .topic-text {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--foreground);
+      text-align: justify;
+    }
+
+    .summary-card {
+      margin-top: 20px;
+      padding: 20px 22px;
+    }
+
+    .summary-card p {
+      margin: 0 0 10px;
+      color: var(--foreground);
+      line-height: 1.72;
+      font-size: 13px;
+      text-align: justify;
+    }
+
+    .summary-card ul,
+    .summary-card ol {
+      margin: 0 0 12px 20px;
+      padding: 0;
+      color: var(--foreground);
+      font-size: 13px;
+      line-height: 1.72;
+    }
+
+    .summary-card li {
+      margin: 0 0 6px;
+    }
+
+    .summary-card strong {
+      color: var(--foreground);
+      font-weight: 700;
+    }
+
+    .summary-card em {
       font-style: italic;
     }
 
-    .article {
-      margin-bottom: 1.8em;
-      padding: 15px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background-color: #fafafa;
+    .summary-card code {
+      padding: 1px 6px;
+      border-radius: 999px;
+      background: var(--soft);
+      color: var(--accent-strong);
+      font-size: 12px;
+      font-family: "Consolas", "SFMono-Regular", monospace;
     }
 
-    .doi, .url {
-      font-size: 0.9em;
-      color: #1a0dab;
+    .articles {
+      margin-top: 54px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .article-card {
+      padding: 18px 20px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+      break-inside: avoid-page;
+    }
+
+    .article-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+    }
+
+    .article-index {
+      min-width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: var(--soft);
+      color: var(--accent-strong);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .article-title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.35;
+      color: var(--foreground);
+    }
+
+    .article-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 10px 0 0;
+    }
+
+    .meta-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      background: #f6fbfb;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .article-copy {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.72;
+      text-align: justify;
+    }
+
+    .article-copy strong {
+      color: var(--foreground);
+    }
+
+    .article-link {
+      color: var(--accent-strong);
+      text-decoration: none;
       word-break: break-word;
     }
 
-    .abstract {
-      margin-top: 0.5em;
-    }
-
     .footer {
-      margin-top: 3em;
-      font-size: 0.8em;
-      color: #999;
-      text-align: center;
-      border-top: 1px solid #ccc;
-      padding-top: 1em;
+      margin-top: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 11px;
     }
 
-    .footer a {
-      color: #1a0dab;
-      text-decoration: none;
-    }
-
-    .footer a:hover {
-      text-decoration: underline;
-    }
-
-    .footer p {
-      margin: 0.2em 0;
-    }
-
-    em, i {
-      font-style: italic !important;
+    .footer strong {
+      color: var(--foreground);
     }
   </style>
 </head>
 <body>
+  <div class="page">
+    <div class="grid-overlay"></div>
+    <div class="content">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 3v3" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+              <path d="M8 6h8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+              <rect x="6" y="7.5" width="12" height="9" rx="3" stroke="white" stroke-width="1.8"/>
+              <circle cx="9.7" cy="11.5" r="1" fill="white"/>
+              <circle cx="14.3" cy="11.5" r="1" fill="white"/>
+              <path d="M9.5 15c.7.45 1.52.7 2.5.7s1.8-.25 2.5-.7" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M6 12.2H4.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+              <path d="M19.5 12.2H18" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="brand-copy">
+            <h1>SciFetch</h1>
+            <p>Scientific intelligence workspace</p>
+          </div>
+        </div>
+        <div class="eyebrow">AI-powered literature retrieval</div>
+      </div>
 
-  <h1>SciFetch Report</h1>
-  <div class="meta" style="text-align: center;">
-    <p><em>Generated on: {{ generation_date }}</em></p>
-    <p class="prompt-line">
-      <strong>Request:</strong> <em>{{ prompt }}</em>
-    </p>
-  </div>
+      <section class="metrics">
+        <div class="metric-card">
+          <p class="metric-label">Sources</p>
+          <div class="metric-main">
+            <p class="metric-value">{{ source_count }} academic APIs</p>
+            <div class="badge-row">
+              <span class="badge">PubMed</span>
+              <span class="badge">arXiv</span>
+              <span class="badge">OpenAlex</span>
+              <span class="badge">Europe PMC</span>
+              <span class="badge">CrossRef</span>
+            </div>
+          </div>
+        </div>
+        <div class="metric-card">
+          <p class="metric-label">Generated</p>
+          <div class="metric-main">
+            <p class="metric-value">{{ generation_date }}</p>
+          </div>
+        </div>
+      </section>
 
-  <h2>Summary</h2>
-  <p>{{ summary }}</p>
+      <section class="topic-card">
+        <p class="section-title">Research topic</p>
+        <p class="topic-text">{{ prompt }}</p>
+      </section>
 
-  <h2>Relevant Articles</h2>
-  {% for article in articles %}
-    <div class="article">
-      <h3>{{ loop.index }}. <em>{{ article.title }}</em></h3>
-      <p><strong>Date:</strong> {{ article.publication_date or "Unknown" }}</p>
-      <p><strong>Source:</strong> {{ article.source or "Unknown" }}</p>
-      {% if article.doi %}
-        <p class="doi"><strong>DOI:</strong> {{ article.doi }}</p>
-      {% endif %}
-      {% if article.url %}
-        <p class="url"><strong>URL:</strong> <a href="{{ article.url }}">{{ article.url }}</a></p>
-      {% endif %}
-      <p class="abstract"><strong>Abstract:</strong> {{ article.abstract[:500] }}...</p>
+      <section class="summary-card">
+        <p class="section-title">Executive summary</p>
+        {{ summary_html | safe }}
+      </section>
+
+      <section class="articles">
+        {% for article in articles %}
+          <article class="article-card">
+            <div class="article-head">
+              <div style="display: flex; gap: 12px; align-items: flex-start;">
+                <div class="article-index">{{ loop.index }}</div>
+                <div>
+                  <h3 class="article-title">{{ article.title or "Untitled article" }}</h3>
+                  <div class="article-meta">
+                    <span class="meta-pill">{{ article.source or "Unknown source" }}</span>
+                    <span class="meta-pill">{{ article.publication_date or "Unknown date" }}</span>
+                    {% if article.doi %}
+                      <span class="meta-pill">DOI: {{ article.doi }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="article-copy">
+              <strong>Abstract.</strong>
+              {{ (article.abstract or "No abstract available.")[:1200] }}
+            </p>
+
+            {% if article.url %}
+              <p class="article-copy">
+                <strong>Source URL.</strong>
+                <a class="article-link" href="{{ article.url }}">{{ article.url }}</a>
+              </p>
+            {% endif %}
+          </article>
+        {% endfor %}
+      </section>
+
+      <div class="footer">
+        <span><strong>SciFetch</strong> · Autonomous retrieval, synthesis and report generation</span>
+        <span>github.com/irdsn/SciFetch</span>
+      </div>
     </div>
-  {% endfor %}
-
-  <div class="footer">
-    <p><strong>Developed by:</strong> Íñigo Rodríguez, AI & Data Engineer</p>
-    <p>
-      <strong>GitHub:</strong>
-      <a href="https://github.com/irdsn">@irdsn</a>
-    </p>
-    <p>
-      Powered by LangChain, FastAPI, Python & Next.js · Using OpenAI Models.
-    </p>
-    <p>
-      Integrated with APIs from arXiv, CrossRef, EuropePMC, OpenAlex and PubMed.
-    </p>
-    <p>
-      For more information, visit the project repository
-      <a href="https://github.com/irdsn/SciFetch">here</a>.
-    </p>
   </div>
-
 </body>
 </html>

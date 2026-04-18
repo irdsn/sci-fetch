@@ -12,20 +12,32 @@
 
 import os
 from pathlib import Path
+import tempfile
 
 ##################################################################################################
 #                                        CONFIGURATION                                           #
 ##################################################################################################
 
-if os.getenv("RENDER", False):
-    # Option A :Use a Render-safe temp directory
-    OUTPUT_DIR = Path("/tmp") / "scifetch_outputs"
-else:
-    # Option B: Save outputs to user's Downloads (recommended for local deployed usage / FastAPI)
-    OUTPUT_DIR = Path.home() / "Downloads" / "SciFetch"
+def _is_render_environment() -> bool:
+    """Returns whether the application is running on Render."""
 
-    # Option C: Uncomment to save locally (for CLI / development)
-    # OUTPUT_DIR = Path("outputs")
+    return os.getenv("RENDER", "").lower() in {"1", "true", "yes"}
+
+
+def _resolve_output_dir() -> Path:
+    """Resolves the report output directory for the current runtime environment."""
+
+    configured_output_dir = os.getenv("SCIFETCH_OUTPUT_DIR", "").strip()
+    if configured_output_dir:
+        return Path(configured_output_dir)
+
+    if _is_render_environment():
+        return Path("/tmp") / "scifetch_outputs"
+
+    return Path(tempfile.gettempdir()) / "scifetch_outputs"
+
+
+OUTPUT_DIR = _resolve_output_dir()
 
 # Ensure the directory exists
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)

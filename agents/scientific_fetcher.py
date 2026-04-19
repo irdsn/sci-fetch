@@ -14,6 +14,7 @@ from datetime import datetime
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import tempfile
 from typing import Any, Dict, Iterable, List
@@ -417,19 +418,60 @@ def _pdf_paragraphs(text: str, style: ParagraphStyle) -> List[Paragraph]:
 def _find_chromium_executable() -> Path | None:
     """Returns a local Chromium/Chrome executable if available."""
 
+    configured_path = os.getenv("SCIFETCH_CHROMIUM_PATH", "").strip()
+    if configured_path:
+        configured_candidate = Path(configured_path)
+        if configured_candidate.exists():
+            return configured_candidate
+
+    playwright_roots = []
+    configured_playwright_root = os.getenv("PLAYWRIGHT_BROWSERS_PATH", "").strip()
+    if configured_playwright_root:
+        playwright_roots.append(Path(configured_playwright_root))
+
+    playwright_roots.extend(
+        [
+            Path.home() / ".cache" / "ms-playwright",
+            Path.home() / "AppData" / "Local" / "ms-playwright",
+            Path("/opt/render/project/.cache/ms-playwright"),
+        ]
+    )
+
+    playwright_candidates: List[Path] = []
+    for root in playwright_roots:
+        if not root.exists():
+            continue
+        for chromium_dir in sorted(root.glob("chromium-*"), reverse=True):
+            playwright_candidates.extend(
+                [
+                    chromium_dir / "chrome-linux" / "chrome",
+                    chromium_dir / "chrome-linux" / "headless_shell",
+                    chromium_dir / "chrome-win" / "chrome.exe",
+                    chromium_dir / "chrome-win64" / "chrome.exe",
+                ]
+            )
+
     candidates = [
+        *playwright_candidates,
         Path(os.getenv("PROGRAMFILES", "")) / "Google" / "Chrome" / "Application" / "chrome.exe",
         Path(os.getenv("PROGRAMFILES(X86)", "")) / "Google" / "Chrome" / "Application" / "chrome.exe",
         Path(os.getenv("LOCALAPPDATA", "")) / "Google" / "Chrome" / "Application" / "chrome.exe",
         Path(os.getenv("PROGRAMFILES", "")) / "Microsoft" / "Edge" / "Application" / "msedge.exe",
         Path(os.getenv("PROGRAMFILES(X86)", "")) / "Microsoft" / "Edge" / "Application" / "msedge.exe",
         Path(os.getenv("LOCALAPPDATA", "")) / "Microsoft" / "Edge" / "Application" / "msedge.exe",
-        Path.home() / "AppData" / "Local" / "ms-playwright" / "chromium-1208" / "chrome-win64" / "chrome.exe",
+        Path("/usr/bin/google-chrome"),
+        Path("/usr/bin/chromium"),
+        Path("/usr/bin/chromium-browser"),
     ]
 
     for candidate in candidates:
         if candidate and candidate.exists():
             return candidate
+
+    for command_name in ("google-chrome", "chromium", "chromium-browser", "chrome", "msedge"):
+        resolved = shutil.which(command_name)
+        if resolved:
+            return Path(resolved)
     return None
 
 
@@ -496,19 +538,25 @@ def write_pdf_report(rendered_html: str, output_path: Path) -> None:
             html_path = Path(handle.name)
 
         try:
+            chromium_arguments = [
+                str(chrome_executable),
+                "--headless=new",
+                "--disable-gpu",
+                "--allow-file-access-from-files",
+                "--run-all-compositor-stages-before-draw",
+                f"--print-to-pdf={str(output_path)}",
+                html_path.resolve().as_uri(),
+            ]
+            if os.name != "nt":
+                chromium_arguments.insert(1, "--disable-dev-shm-usage")
+                chromium_arguments.insert(1, "--no-sandbox")
+
+            logger.info(f"Attempting Chromium PDF rendering with executable: {chrome_executable}")
             completed_process = subprocess.run(
-                [
-                    str(chrome_executable),
-                    "--headless=new",
-                    "--disable-gpu",
-                    "--allow-file-access-from-files",
-                    "--run-all-compositor-stages-before-draw",
-                    f"--print-to-pdf={str(output_path)}",
-                    html_path.resolve().as_uri(),
-                ],
+                chromium_arguments,
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=int(os.getenv("SCIFETCH_PDF_RENDER_TIMEOUT_SECONDS", "90")),
             )
             if output_path.exists() and output_path.stat().st_size > 0:
                 return
@@ -527,6 +575,7 @@ def write_pdf_report(rendered_html: str, output_path: Path) -> None:
     except Exception as exc:
         raise RuntimeError("No high-fidelity PDF renderer is available in this environment.") from exc
 
+    logger.info("Falling back to WeasyPrint for PDF generation.")
     HTML(
         string=rendered_html,
         base_url=str(Path(__file__).resolve().parent.parent),

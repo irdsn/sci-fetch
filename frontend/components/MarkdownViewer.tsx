@@ -7,10 +7,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 interface HtmlPreviewProps {
   content: string;
   downloadUrl?: string;
+  pdfStatus?: "idle" | "pending" | "ready" | "failed";
 }
 
-export default function MarkdownViewer({ content, downloadUrl }: HtmlPreviewProps) {
+export default function MarkdownViewer({ content, downloadUrl, pdfStatus = "idle" }: HtmlPreviewProps) {
   const hasReport = Boolean(downloadUrl || content);
+  const canTogglePreview = Boolean(content);
   const [isDownloading, setIsDownloading] = useState(false);
   const [isPreviewExpanded, setIsPreviewExpanded] = useState(false);
   const previewPanelId = useId();
@@ -44,7 +46,7 @@ export default function MarkdownViewer({ content, downloadUrl }: HtmlPreviewProp
   }, [content]);
 
   useEffect(() => {
-    setIsPreviewExpanded(Boolean(downloadUrl || content));
+    setIsPreviewExpanded(Boolean(content));
   }, [content, downloadUrl]);
 
   const handleDownload = async () => {
@@ -78,7 +80,7 @@ export default function MarkdownViewer({ content, downloadUrl }: HtmlPreviewProp
   };
 
   const handlePreviewToggle = () => {
-    if (!downloadUrl) {
+    if (!canTogglePreview) {
       return;
     }
     setIsPreviewExpanded((currentValue) => !currentValue);
@@ -96,14 +98,14 @@ export default function MarkdownViewer({ content, downloadUrl }: HtmlPreviewProp
   return (
     <Card className="overflow-hidden">
       <CardHeader
-        role={downloadUrl ? "button" : undefined}
-        tabIndex={downloadUrl ? 0 : -1}
-        aria-expanded={downloadUrl ? isPreviewExpanded : undefined}
-        aria-controls={downloadUrl ? previewPanelId : undefined}
+        role={canTogglePreview ? "button" : undefined}
+        tabIndex={canTogglePreview ? 0 : -1}
+        aria-expanded={canTogglePreview ? isPreviewExpanded : undefined}
+        aria-controls={canTogglePreview ? previewPanelId : undefined}
         onClick={handlePreviewToggle}
         onKeyDown={handlePreviewHeaderKeyDown}
         className={`border-b border-[var(--border)]/80 bg-white/70 transition-colors ${
-          downloadUrl ? "cursor-pointer hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2" : ""
+          canTogglePreview ? "cursor-pointer hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2" : ""
         }`}
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -140,8 +142,8 @@ export default function MarkdownViewer({ content, downloadUrl }: HtmlPreviewProp
               </Button>
             ) : (
               <Button disabled className="opacity-100 disabled:bg-[var(--accent)] disabled:text-white/70">
-                <Download className="size-4" />
-                Download PDF
+                {pdfStatus === "pending" ? <LoaderCircle className="size-4 animate-spin" /> : <Download className="size-4" />}
+                {pdfStatus === "pending" ? "Generating PDF" : "Download PDF"}
               </Button>
             )}
           </div>
@@ -159,7 +161,7 @@ export default function MarkdownViewer({ content, downloadUrl }: HtmlPreviewProp
                 Waiting for the next report
               </p>
               <p className="mx-auto max-w-2xl text-[var(--muted-foreground)]">
-                Launch a retrieval run to populate this workspace. The preview area will render the generated PDF inside SciFetch.
+                Launch a retrieval run to populate this workspace. The preview area will render the generated report inside SciFetch.
               </p>
             </div>
           </div>

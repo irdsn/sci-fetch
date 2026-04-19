@@ -1,6 +1,6 @@
 import Head from "next/head";
 import { Activity, AlertCircle, ArrowUpRight, Bot, DatabaseZap, FlaskConical, LoaderCircle, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Footer from "@/components/Footer";
 import InputForm from "@/components/InputForm";
@@ -37,9 +37,12 @@ export default function Home() {
   const [apiKey, setApiKey] = useState("");
   const [htmlPreview, setHtmlPreview] = useState("");
   const [downloadUrl, setDownloadUrl] = useState("");
+  const [pdfStatus, setPdfStatus] = useState<"idle" | "pending" | "ready" | "failed">("idle");
+  const [statusUrl, setStatusUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [warning, setWarning] = useState("");
+  const pollingIntervalRef = useRef<number | null>(null);
 
   const canSubmit = prompt.trim().length > 0 && apiKey.trim().length > 0;
   const apiBaseUrl = process.env.NEXT_PUBLIC_SCIFETCH_API ?? defaultApiBaseUrl;
@@ -49,6 +52,66 @@ export default function Home() {
     { label: "Output", value: "Preview + PDF" },
     { label: "Mode", value: "Autonomous retrieval" },
   ];
+
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        window.clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!statusUrl || pdfStatus !== "pending") {
+      return;
+    }
+
+    const pollStatus = async () => {
+      try {
+        const response = await fetch(statusUrl);
+        if (!response.ok) {
+          throw new Error(`Status check failed with status ${response.status}`);
+        }
+
+        const statusPayload = await response.json();
+        const nextStatus = statusPayload.status as "pending" | "ready" | "failed";
+        setPdfStatus(nextStatus);
+
+        if (statusPayload.download_url) {
+          setDownloadUrl(statusPayload.download_url);
+        }
+
+        if (statusPayload.pdf_warning) {
+          setWarning(statusPayload.pdf_warning);
+        }
+
+        if (nextStatus !== "pending" && pollingIntervalRef.current) {
+          window.clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      } catch (statusError) {
+        console.error(statusError);
+        setPdfStatus("failed");
+        setWarning("The PDF generation status could not be confirmed. Try running the request again.");
+        if (pollingIntervalRef.current) {
+          window.clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
+      }
+    };
+
+    void pollStatus();
+    pollingIntervalRef.current = window.setInterval(() => {
+      void pollStatus();
+    }, 3000);
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        window.clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
+  }, [pdfStatus, statusUrl]);
 
   const handleRunAgent = async () => {
     if (!prompt.trim()) {
@@ -66,6 +129,12 @@ export default function Home() {
     setWarning("");
     setHtmlPreview("");
     setDownloadUrl("");
+    setStatusUrl("");
+    setPdfStatus("idle");
+    if (pollingIntervalRef.current) {
+      window.clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
 
     try {
       const response = await fetch(`${apiBaseUrl}/run`, {
@@ -96,8 +165,10 @@ export default function Home() {
 
       const data = await response.json();
       setHtmlPreview(data.html_preview ?? "");
-      setDownloadUrl(data.download_url ?? "");
+      setDownloadUrl(data.pdf_status === "ready" ? (data.download_url ?? "") : "");
       setWarning(data.pdf_warning ?? "");
+      setStatusUrl(data.status_url ?? "");
+      setPdfStatus(data.pdf_status ?? (data.download_url ? "ready" : "idle"));
     } catch (requestError) {
       console.error(requestError);
       const message =
@@ -244,7 +315,7 @@ export default function Home() {
                         <div>
                           <p className="font-medium text-[var(--foreground)]">Pipeline in progress</p>
                           <p className="text-sm text-[var(--muted-foreground)]">
-                            Querying sources, aggregating papers and preparing the preview.
+            Querying sources, aggregating papers and preparing the preview.
                           </p>
                         </div>
                       </div>
@@ -293,7 +364,17 @@ export default function Home() {
                             <span className="text-sm font-medium text-slate-100">{step}</span>
                           </div>
                           <span className="text-xs uppercase tracking-[0.22em] text-slate-300">
-                            {htmlPreview ? "Ready" : isActive ? "Active" : isComplete ? "Primed" : "Queued"}
+                            {pdfStatus === "ready"
+                              ? "Ready"
+                              : pdfStatus === "pending"
+                                ? "Rendering"
+                                : htmlPreview
+                                  ? "Ready"
+                                  : isActive
+                                    ? "Active"
+                                    : isComplete
+                                      ? "Primed"
+                                      : "Queued"}
                           </span>
                         </div>
                       );
@@ -347,7 +428,7 @@ export default function Home() {
               </div>
             </div>
 
-            <MarkdownViewer content={htmlPreview} downloadUrl={downloadUrl} />
+            <MarkdownViewer content={htmlPreview} downloadUrl={downloadUrl} pdfStatus={pdfStatus} />
           </section>
         </section>
 

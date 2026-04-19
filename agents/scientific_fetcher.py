@@ -19,6 +19,7 @@ import subprocess
 import tempfile
 from typing import Any, Dict, Iterable, List
 import unicodedata
+from uuid import uuid4
 from xml.sax.saxutils import escape
 
 from dotenv import load_dotenv
@@ -586,366 +587,9 @@ def write_pdf_report(rendered_html: str, output_path: Path) -> None:
 
     raise RuntimeError("High-fidelity PDF rendering failed.")
 
-    report_context = _LAST_REPORT_CONTEXT.copy()
-    user_input = _normalize_text(report_context.get("user_input"))
-    summary = _normalize_text(report_context.get("summary"))
-    articles = report_context.get("articles") or []
-    generation_date = _normalize_text(report_context.get("generation_date")) or datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
 
-    styles = getSampleStyleSheet()
-    brand_style = ParagraphStyle(
-        "Brand",
-        parent=styles["Title"],
-        fontName="Helvetica-Bold",
-        fontSize=26,
-        leading=30,
-        textColor=colors.HexColor("#102032"),
-        spaceAfter=5,
-    )
-    subtitle_style = ParagraphStyle(
-        "Subtitle",
-        parent=styles["BodyText"],
-        fontName="Helvetica",
-        fontSize=12,
-        leading=16,
-        textColor=colors.HexColor("#4b6b77"),
-        spaceAfter=0,
-    )
-    section_label_style = ParagraphStyle(
-        "SectionLabel",
-        parent=styles["Heading2"],
-        fontName="Helvetica-Bold",
-        fontSize=11.5,
-        leading=13.5,
-        textColor=colors.HexColor("#0f766e"),
-        spaceAfter=8,
-        spaceBefore=2,
-        uppercase=True,
-    )
-    card_title_style = ParagraphStyle(
-        "CardTitle",
-        parent=styles["Heading3"],
-        fontName="Helvetica-Bold",
-        fontSize=11.4,
-        leading=14.6,
-        textColor=colors.HexColor("#102032"),
-        spaceAfter=3,
-    )
-    body_style = ParagraphStyle(
-        "Body",
-        parent=styles["BodyText"],
-        fontName="Helvetica",
-        fontSize=10.2,
-        leading=15.8,
-        textColor=colors.HexColor("#1f2937"),
-        spaceAfter=6,
-        alignment=TA_JUSTIFY,
-    )
-    meta_style = ParagraphStyle(
-        "Meta",
-        parent=styles["BodyText"],
-        fontName="Helvetica-Bold",
-        fontSize=8.3,
-        leading=11,
-        textColor=colors.HexColor("#5b6b7b"),
-        spaceAfter=2,
-    )
-    meta_value_style = ParagraphStyle(
-        "MetaValue",
-        parent=styles["BodyText"],
-        fontName="Helvetica",
-        fontSize=9.3,
-        leading=12.5,
-        textColor=colors.HexColor("#1f2937"),
-        spaceAfter=2,
-    )
-    article_meta_style = ParagraphStyle(
-        "ArticleMeta",
-        parent=styles["BodyText"],
-        fontName="Helvetica",
-        fontSize=8.2,
-        leading=10.6,
-        textColor=colors.HexColor("#5b6b7b"),
-        spaceAfter=2,
-    )
-    metric_label_style = ParagraphStyle(
-        "MetricLabel",
-        parent=styles["BodyText"],
-        fontName="Helvetica-Bold",
-        fontSize=7.6,
-        leading=10,
-        textColor=colors.HexColor("#5d7286"),
-        uppercase=True,
-        spaceAfter=2,
-        alignment=TA_CENTER,
-    )
-    metric_value_style = ParagraphStyle(
-        "MetricValue",
-        parent=styles["BodyText"],
-        fontName="Helvetica-Bold",
-        fontSize=13.2,
-        leading=16,
-        textColor=colors.HexColor("#102032"),
-        alignment=TA_CENTER,
-    )
-    prompt_style = ParagraphStyle(
-        "Prompt",
-        parent=styles["BodyText"],
-        fontName="Helvetica",
-        fontSize=10.4,
-        leading=15.4,
-        textColor=colors.HexColor("#1f2937"),
-    )
-    article_body_style = ParagraphStyle(
-        "ArticleBody",
-        parent=body_style,
-        fontSize=9.5,
-        leading=14.6,
-        alignment=TA_JUSTIFY,
-    )
-    article_index_style = ParagraphStyle(
-        "ArticleIndex",
-        parent=styles["BodyText"],
-        fontName="Helvetica-Bold",
-        fontSize=9,
-        leading=11,
-        textColor=colors.HexColor("#0c625c"),
-        alignment=TA_CENTER,
-    )
-    hero_badge_style = ParagraphStyle(
-        "HeroBadge",
-        parent=styles["BodyText"],
-        fontName="Helvetica-Bold",
-        fontSize=8.2,
-        leading=10,
-        textColor=colors.HexColor("#4b6b77"),
-    )
-    hero_copy_style = ParagraphStyle(
-        "HeroCopy",
-        parent=styles["BodyText"],
-        fontName="Helvetica",
-        fontSize=10.1,
-        leading=14.8,
-        textColor=colors.HexColor("#5d7286"),
-        alignment=TA_JUSTIFY,
-    )
-
-    document = SimpleDocTemplate(
-        str(output_path),
-        pagesize=A4,
-        leftMargin=16 * mm,
-        rightMargin=16 * mm,
-        topMargin=28 * mm,
-        bottomMargin=18 * mm,
-        title="SciFetch Report",
-        author="SciFetch",
-    )
-
-    hero_table = Table(
-        [
-            [Paragraph("SciFetch", brand_style)],
-            [Paragraph("Research faster with a retrieval pipeline built for scientific work.", subtitle_style)],
-            [
-                Paragraph(
-                    "SciFetch is an autonomous AI agent designed to search, synthesize, and generate scientific "
-                    "literature reports based on natural language prompts.",
-                    hero_copy_style,
-                )
-            ],
-        ],
-        colWidths=[170 * mm],
-    )
-    hero_table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-                ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#d6e2e8")),
-                ("LINEABOVE", (0, 0), (-1, 0), 2.4, colors.HexColor("#0f766e")),
-                ("LEFTPADDING", (0, 0), (-1, -1), 18),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 18),
-                ("TOPPADDING", (0, 0), (-1, -1), 18),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 18),
-            ]
-        )
-    )
-
-    badge_table = Table(
-        [[Paragraph("AI-powered literature retrieval", hero_badge_style)]],
-        colWidths=[64 * mm],
-    )
-    badge_table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-                ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#d6e2e8")),
-                ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-                ("TOPPADDING", (0, 0), (-1, -1), 6),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
-            ]
-        )
-    )
-
-    metrics_table = Table(
-        [
-            [
-                Paragraph("Sources", metric_label_style),
-                Paragraph("Output", metric_label_style),
-                Paragraph("Mode", metric_label_style),
-            ],
-            [
-                Paragraph(f"{len(SOURCE_TOOLS)} academic APIs", metric_value_style),
-                Paragraph("Preview + PDF", metric_value_style),
-                Paragraph("Autonomous retrieval", metric_value_style),
-            ],
-        ],
-        colWidths=[58 * mm, 54 * mm, 58 * mm],
-    )
-    metrics_table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#ffffff")),
-                ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#d6e2e8")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.6, colors.HexColor("#d6e2e8")),
-                ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-                ("TOPPADDING", (0, 0), (-1, -1), 8),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ]
-        )
-    )
-
-    prompt_table = Table(
-        [
-            [Paragraph("Research topic", section_label_style)],
-            [Paragraph(escape(_plain_text(user_input) or "N/A"), prompt_style)],
-        ],
-        colWidths=[170 * mm],
-    )
-    prompt_table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#fbfdfe")),
-                ("BOX", (0, 0), (-1, -1), 0.9, colors.HexColor("#d6e2e8")),
-                ("LINEABOVE", (0, 0), (-1, 0), 3, colors.HexColor("#0f766e")),
-                ("LEFTPADDING", (0, 0), (-1, -1), 12),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-                ("TOPPADDING", (0, 0), (-1, -1), 10),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
-            ]
-        )
-    )
-
-    metadata_table = Table(
-        [
-            [Paragraph("Generated", meta_style), Paragraph(escape(generation_date), meta_value_style)],
-            [Paragraph("Recovered articles", meta_style), Paragraph(str(len(articles)), meta_value_style)],
-        ],
-        colWidths=[38 * mm, 132 * mm],
-    )
-    metadata_table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f6fbfb")),
-                ("BOX", (0, 0), (-1, -1), 0.8, colors.HexColor("#d4e6e4")),
-                ("INNERGRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#d4e6e4")),
-                ("LEFTPADDING", (0, 0), (-1, -1), 10),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 10),
-                ("TOPPADDING", (0, 0), (-1, -1), 5),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-            ]
-        )
-    )
-
-    summary_blocks = _pdf_paragraphs(summary, body_style) or [Paragraph("No summary available.", body_style)]
-    summary_table = Table([[block] for block in summary_blocks], colWidths=[170 * mm])
-    summary_table.setStyle(
-        TableStyle(
-            [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#ffffff")),
-                ("BOX", (0, 0), (-1, -1), 0.7, colors.HexColor("#dfe8ed")),
-                ("LEFTPADDING", (0, 0), (-1, -1), 12),
-                ("RIGHTPADDING", (0, 0), (-1, -1), 12),
-                ("TOPPADDING", (0, 0), (-1, -1), 9),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 9),
-            ]
-        )
-    )
-
-    story = [
-        hero_table,
-        Spacer(1, 8),
-        Spacer(1, 8),
-        badge_table,
-        Spacer(1, 10),
-        metrics_table,
-        Spacer(1, 12),
-        prompt_table,
-        Spacer(1, 12),
-        metadata_table,
-        Spacer(1, 12),
-        Paragraph("Executive summary", section_label_style),
-        summary_table,
-        Spacer(1, 14),
-        Paragraph("Relevant articles", section_label_style),
-    ]
-
-    for index, article in enumerate(articles, start=1):
-        title = escape(_plain_text(article.get("title", "")) or "Untitled article")
-        publication_date = escape(_plain_text(article.get("publication_date", "")) or "Unknown date")
-        source = escape(_plain_text(article.get("source", "")) or "Unknown source")
-        doi = escape(_plain_text(article.get("doi", "")))
-        url = escape(_plain_text(article.get("url", "")))
-        abstract = escape((_plain_text(article.get("abstract", "")) or "No abstract available.")[:1200])
-        if index > 1:
-            story.append(Spacer(1, 3))
-
-        article_card = Table(
-            [
-                [Paragraph(str(index), article_index_style), Paragraph(title, card_title_style)],
-                ["", Paragraph(f"{source} | {publication_date}", article_meta_style)],
-                ["", Paragraph(f"DOI: {doi}", article_meta_style)] if doi else ["", ""],
-                ["", Paragraph(f"URL: {url}", article_meta_style)] if url else ["", ""],
-                ["", Paragraph(abstract, article_body_style)],
-            ],
-            colWidths=[12 * mm, 158 * mm],
-        )
-        article_card.setStyle(
-            TableStyle(
-                [
-                    ("BACKGROUND", (0, 0), (-1, -1), colors.white),
-                    ("BOX", (0, 0), (-1, -1), 0.85, colors.HexColor("#d7e2ea")),
-                    ("LINEABOVE", (0, 0), (-1, 0), 2, colors.HexColor("#d8a11e")),
-                    ("BACKGROUND", (0, 0), (0, 0), colors.HexColor("#edf7f6")),
-                    ("BOX", (0, 0), (0, 0), 0.45, colors.HexColor("#d7e2ea")),
-                    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                    ("LEFTPADDING", (0, 0), (0, 0), 0),
-                    ("RIGHTPADDING", (0, 0), (0, 0), 0),
-                    ("TOPPADDING", (0, 0), (0, 0), 4),
-                    ("BOTTOMPADDING", (0, 0), (0, 0), 4),
-                    ("SPAN", (0, 1), (0, -1)),
-                    ("LEFTPADDING", (1, 0), (1, -1), 8),
-                    ("RIGHTPADDING", (1, 0), (1, -1), 10),
-                    ("TOPPADDING", (1, 0), (1, -1), 0),
-                    ("BOTTOMPADDING", (1, 0), (1, -1), 2),
-                    ("LEFTPADDING", (0, 1), (0, -1), 0),
-                    ("RIGHTPADDING", (0, 1), (0, -1), 0),
-                    ("TOPPADDING", (0, 1), (0, -1), 0),
-                    ("BOTTOMPADDING", (0, 1), (0, -1), 0),
-                ]
-            )
-        )
-        story.append(article_card)
-        story.append(Spacer(1, 8))
-
-    document.build(story, onFirstPage=_draw_pdf_frame, onLaterPages=_draw_pdf_frame)
-
-
-def run_agent(user_input: str, api_key: str) -> Dict[str, Any]:
-    """Runs the scientific retrieval pipeline end-to-end."""
+def _build_report_payload(user_input: str, api_key: str) -> Dict[str, Any]:
+    """Builds the report payload without generating the PDF artifact."""
 
     if not user_input.strip():
         raise ValueError("User input cannot be empty.")
@@ -974,6 +618,10 @@ def run_agent(user_input: str, api_key: str) -> Dict[str, Any]:
 
     generation_date = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
     rendered_html = render_report_html(user_input=user_input, summary=summary, articles=articles)
+    report_id = uuid4().hex[:8]
+    filename = f"{slugify_filename(user_input) or 'scifetch_report'}_{report_id}"
+    pdf_output_path = OUTPUT_DIR / f"{filename}.pdf"
+
     _LAST_REPORT_CONTEXT.clear()
     _LAST_REPORT_CONTEXT.update(
         {
@@ -984,26 +632,51 @@ def run_agent(user_input: str, api_key: str) -> Dict[str, Any]:
         }
     )
 
-    filename = slugify_filename(user_input) or "scifetch_report"
-    pdf_output_path = OUTPUT_DIR / f"{filename}.pdf"
+    return {
+        "report_id": report_id,
+        "summary": summary,
+        "articles": articles,
+        "html_preview": rendered_html,
+        "filename": f"{filename}.pdf",
+        "output_path": pdf_output_path,
+    }
+
+
+def generate_pdf_artifact(rendered_html: str, output_path: Path) -> Dict[str, Any]:
+    """Generates the PDF artifact and returns the resulting output metadata."""
+
     pdf_warning = None
     output_file = None
 
     try:
-        pdf_output_path.parent.mkdir(parents=True, exist_ok=True)
-        write_pdf_report(rendered_html, pdf_output_path)
-        output_file = str(pdf_output_path)
-        logger.info(f"Scientific retrieval pipeline completed successfully: {pdf_output_path}")
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        write_pdf_report(rendered_html, output_path)
+        output_file = str(output_path)
+        logger.info(f"Scientific retrieval pipeline completed successfully: {output_path}")
     except Exception as exc:
         pdf_warning = f"PDF generation failed in this environment: {exc.__class__.__name__}"
         logger.exception("PDF generation failed.")
 
     return {
-        "summary": summary,
-        "articles": articles,
-        "html_preview": rendered_html,
         "output_file": output_file,
         "pdf_warning": pdf_warning,
+    }
+
+
+def run_agent(user_input: str, api_key: str) -> Dict[str, Any]:
+    """Runs the scientific retrieval pipeline end-to-end."""
+
+    result = _build_report_payload(user_input, api_key)
+    pdf_result = generate_pdf_artifact(result["html_preview"], result["output_path"])
+
+    return {
+        "report_id": result["report_id"],
+        "summary": result["summary"],
+        "articles": result["articles"],
+        "html_preview": result["html_preview"],
+        "filename": result["filename"],
+        "output_file": pdf_result["output_file"],
+        "pdf_warning": pdf_result["pdf_warning"],
     }
 
 
